@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 import { api } from "../utils/api";
+import { useState } from "react";
 
 const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: "from tRPC" });
@@ -21,7 +22,8 @@ const Home: NextPage = () => {
             <p className="text-2xl text-white">
               {hello.data ? hello.data.greeting : "Loading tRPC query..."}
             </p>
-            <AuthShowcase />
+            {/* <AuthShowcase /> */}
+            <UploadImage />
           </div>
         </div>
       </main>
@@ -30,6 +32,39 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
+const UploadImage: React.FC = () => {
+  const [image, setImage] = useState("");
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target) {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const context = canvas.getContext("2d");
+            context?.drawImage(img, 0, 0);
+            const pngImage = canvas.toDataURL("image/png");
+            setImage(pngImage);
+          };
+          img.src = event.target.result as string;
+        }
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  return (
+    <div className="bg-gray-300">
+      <input type="file" onChange={handleImageUpload} />
+      {image && <img src={image} alt="uploaded image" className="max-w-xs" />}
+    </div>
+  );
+};
 
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
