@@ -44,12 +44,25 @@ const UploadImage: React.FC = () => {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
+            const squareSize = Math.min(img.width, img.height);
+            canvas.width = squareSize;
+            canvas.height = squareSize;
             const context = canvas.getContext("2d");
-            context?.drawImage(img, 0, 0);
-            const pngImage = canvas.toDataURL("image/png");
-            setImage(pngImage);
+            if (context) {
+              context.drawImage(
+                img,
+                (img.width - squareSize) / 2,
+                (img.height - squareSize) / 2,
+                squareSize,
+                squareSize,
+                0,
+                0,
+                squareSize,
+                squareSize
+              );
+              const pngImage = canvas.toDataURL("image/png");
+              setImage(pngImage);
+            }
           };
           img.src = event.target.result as string;
         }
