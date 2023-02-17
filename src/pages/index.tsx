@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 import { api } from "../utils/api";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: "from tRPC" });
@@ -33,8 +33,21 @@ const Home: NextPage = () => {
 
 export default Home;
 
+// Made by ChatGPT
 const UploadImage: React.FC = () => {
   const [image, setImage] = useState("");
+  const [drawing, setDrawing] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.globalCompositeOperation = "destination-out";
+      }
+    }
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -71,10 +84,56 @@ const UploadImage: React.FC = () => {
     }
   };
 
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setDrawing(true);
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (context) {
+      context.beginPath();
+      context.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (drawing) {
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext("2d");
+      if (context) {
+        context.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        context.stroke();
+      }
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setDrawing(false);
+  };
+
   return (
     <div className="bg-gray-300">
       <input type="file" onChange={handleImageUpload} />
-      {image && <img src={image} alt="uploaded image" className="max-w-xs" />}
+      {image && (
+        <div style={{ position: "relative" }}>
+          <img
+            src={image}
+            alt="uploaded image"
+            style={{ width: "100%", height: "auto" }}
+          />
+          <canvas
+            ref={canvasRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "auto",
+            }}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+          />
+        </div>
+      )}
     </div>
   );
 };
